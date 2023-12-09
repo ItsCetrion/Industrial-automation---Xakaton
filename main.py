@@ -1,7 +1,7 @@
 import telebot
 import webbrowser
 bot = telebot.TeleBot('6746593435:AAGZzQbDaY6zcxs7klTVyFbkKej_BMiCIos')
-
+a = 3087432743240384032408
 
 @bot.message_handler(commands=["sisite", "website"])
 def site(message):
@@ -10,7 +10,7 @@ def site(message):
 
 @bot.message_handler(commands=['start'])
 def main(message):
-    bot.send_message(message.chat.id, f"Привет, {message.from_user.first_name} {message.from_user.last_name}")
+        bot.send_message(message.chat.id, f"Привет, {message.from_user.first_name} {message.from_user.last_name}")
 
 
 @bot.message_handler(commands=['help'])
@@ -24,6 +24,7 @@ def info(message):
         bot.send_message(message.chat.id, f"Вот тебе информация {message.from_user.first_name}")
     elif message.text.lower() == "id":
         bot.send_message(message.chat.id, f"Вот твой id\n{message.from_user.id}")
+
 
 
 bot.polling(none_stop=True)
