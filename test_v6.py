@@ -21,6 +21,9 @@ max_temperature = 0
 min_voltage = 0
 max_voltage = 0
 
+backup_configuration = []
+buffer_configuration = []
+
 
 def check(id):
     with open('BD_Workers') as file:
@@ -49,6 +52,8 @@ def send_welcome(message):
         min_voltage = -19
         global max_voltage
         max_voltage = 20
+        global buffer_configuration
+        buffer_configuration = [min_temperature, max_temperature, min_pressure, max_pressure, min_voltage, max_voltage]
 
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         item1 = types.KeyboardButton("Загрузить CSV файл")
@@ -69,23 +74,42 @@ def handle_messages(message):
         global configuring_temperature
         global configuring_pressure
         global configuring_voltage
-
+        global buffer_configuration
+        global backup_configuration
+        buffer = buffer_configuration.copy()
         if message.text == "Загрузить CSV файл":
             bot.reply_to(message, "Пришлите мне свой CSV файл с показаниями контроллеров.")
         elif message.text == "Изменение конфигурации":
             show_current_configuration(message.chat.id)
+
             show_configuration_menu(message.chat.id)
+
         elif configuring_temperature:
-            handle_temperature_input(message)
+            temperature = handle_temperature_input(message)
+            buffer[0] = temperature[0]
+            buffer[1] = temperature[1]
         elif configuring_pressure:
-            handle_pressure_input(message)
+            pressure = handle_pressure_input(message)
+            buffer[2] = pressure[0]
+            buffer[3] = pressure[1]
         elif configuring_voltage:
-            handle_voltage_input(message)
+            voltage = handle_voltage_input(message)
+            buffer[4] = voltage[0]
+            buffer[5] = voltage[1]
         else:
             bot.reply_to(message, "Неверный запрос! Выберите действие, используя кнопку 'Загрузить CSV файл' или введите корректный запрос.")
+        if buffer_configuration != buffer:
+            backup_configuration.append(buffer_configuration)
+            buffer_configuration = buffer
+            print(buffer)
+            print(backup_configuration)
     else:
         bot.send_message(message.chat.id, "У вас нет прав для этого бота")
 
+
+# def check_save_configuration()
+# def save_configuration(*args):
+#     configuration.append((args[0], args[1], args[2], args[3], args[4]))
 
 # Обработчик Inline-команд
 @bot.callback_query_handler(func=lambda call: True)
@@ -96,6 +120,8 @@ def handle_inline_buttons(call):
         change_pressure_configuration(call.message.chat.id)
     elif call.data == "change_voltage":
         change_configuration_voltage(call.message.chat.id)
+    elif call.data == "backup":
+        change_backup(call.message.chat.id)
 
 
 def show_current_configuration(chat_id):
@@ -105,7 +131,7 @@ def show_current_configuration(chat_id):
                   f"Максимальное значение давления: {max_pressure}\n" \
                   f"Минимальное значение давления: {min_pressure}\n" \
                   f"Максимальное значение напряжения: {max_voltage}\n" \
-                  f"Минимальное значение напряжения: {max_voltage}"
+                  f"Минимальное значение напряжения: {min_voltage}"
 
     bot.send_message(chat_id, current_conf)
 
@@ -116,10 +142,33 @@ def show_configuration_menu(chat_id):
     item1 = types.InlineKeyboardButton("Изменение температуры", callback_data="change_temperature")
     item2 = types.InlineKeyboardButton("Изменение давления", callback_data="change_pressure")
     item3 = types.InlineKeyboardButton("Изменение напряжения", callback_data="change_voltage")
+    backup = types.InlineKeyboardButton("Вернуться к предыдущей конфигурации", callback_data="backup")
 
-    markup.add(item1, item2, item3)
+    markup.add(item1, item2, item3, backup)
 
     bot.send_message(chat_id, "Выберите параметр для изменения конфигурации:", reply_markup=markup)
+
+
+def change_backup(chat_id):
+    global backup_configuration
+    if len(backup_configuration) >= 1:
+        global min_temperature
+        min_temperature = backup_configuration[-1][0]
+        global max_temperature
+        max_temperature = backup_configuration[-1][1]
+        global min_pressure
+        min_pressure = backup_configuration[-1][2]
+        global max_pressure
+        max_pressure = backup_configuration[-1][3]
+        global min_voltage
+        min_voltage = backup_configuration[-1][4]
+        global max_voltage
+        max_voltage = backup_configuration[-1][5]
+        backup_configuration.pop()
+        bot.send_message(chat_id, "Конфигурация изменена. Произведен возврат к предыдущей конфигурации")
+    else:
+        bot.send_message(chat_id, "Нет предыдущей конфигурации для возврата")
+
 
 
 # Функция для изменения температуры
@@ -156,6 +205,7 @@ def handle_temperature_input(message):
 
             # Здесь можно обновить конфигурацию с учетом новых значений температуры
             bot.send_message(message.chat.id, f"Конфигурация температуры изменена. Мин: {min_temperature}, Макс: {max_temperature}")
+            return min_temperature, max_temperature
 
         except Exception as e:
             bot.send_message(message.chat.id, f"Ошибка ввода. Попробуйте еще раз. Ошибка: {str(e)}")
@@ -178,6 +228,7 @@ def handle_pressure_input(message):
 
             # Здесь можно обновить конфигурацию с учетом новых значений давления
             bot.send_message(message.chat.id, f"Конфигурация давления изменена. Мин: {min_pressure}, Макс: {max_pressure}")
+            return min_pressure, max_pressure
 
         except Exception as e:
             bot.send_message(message.chat.id, f"Ошибка ввода. Попробуйте еще раз. Ошибка: {str(e)}")
@@ -200,6 +251,7 @@ def handle_voltage_input(message):
 
             # Здесь можно обновить конфигурацию с учетом новых значений напряжения
             bot.send_message(message.chat.id, f"Конфигурация напряжения изменена. Мин: {min_voltage}, Макс: {max_voltage}")
+            return min_voltage, max_voltage
 
         except Exception as e:
             bot.send_message(message.chat.id, f"Ошибка ввода. Попробуйте еще раз. Ошибка: {str(e)}")
