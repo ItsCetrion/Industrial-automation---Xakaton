@@ -1,0 +1,30 @@
+import telebot
+
+GreenBear = telebot.TeleBot('6746593435:AAGZzQbDaY6zcxs7klTVyFbkKej_BMiCIos')
+
+@GreenBear.message_handler(commands=["пипки"])
+def hello(message):
+    GreenBear.send_message(message.chat.id,"ПИЗДА И ЖОПА")
+
+@GreenBear.message_handler()
+def info(message):
+    msg = message.text.lower()
+    usrname = message.from_user.first_name
+    if msg == "игорь чурка":
+        print(usrname)
+        norm = open("norm.jpg","rb")
+        GreenBear.send_photo(message.chat.id, norm)
+        norm.close()
+    if msg == "андрей пидор":
+        print(usrname)
+        norm = open("xf.jpg","rb")
+        GreenBear.send_photo(message.chat.id, norm)
+        norm.close()
+    else :
+        print(usrname)
+        GreenBear.send_message(message.chat.id, "Я не понимаю, о чем речь")
+
+
+
+
+GreenBear.polling(non_stop= True)
