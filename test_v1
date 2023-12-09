@@ -2,9 +2,9 @@ import telebot
 
 GreenBear = telebot.TeleBot('6746593435:AAGZzQbDaY6zcxs7klTVyFbkKej_BMiCIos')
 
-@GreenBear.message_handler(commands=["пипки"])
+@GreenBear.message_handler(commands=["help"])
 def hello(message):
-    GreenBear.send_message(message.chat.id,"ПИЗДА И ЖОПА")
+    GreenBear.send_message(message.chat.id,"")
 
 @GreenBear.message_handler()
 def info(message):
